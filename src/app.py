@@ -6,12 +6,23 @@ import os
 import time
 import numpy as np
 from collections import deque
+import sqlite3
 
 app = Flask(__name__)
 
 last_ram = None
 last_cleared = 0
 ram_history = deque(maxlen=15)
+
+def init_db():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    # Create table if it doesn't exist
+    c.execute('''CREATE TABLE IF NOT EXISTS metrics
+                 (timestamp DATETIME, cpu REAL, ram REAL, prediction TEXT)''')
+    conn.commit()
+    conn.close()
+
 
 def predict_crash():
     if len(ram_history) < 10:
@@ -40,10 +51,13 @@ def analyze_trend(current_ram):
     last_ram = current_ram
 
 
-def log_metrics(cpu, ram):
-    with open('metrics.csv', 'a', buffering=1) as f:
-        writer = csv.writer(f)
-        writer.writerow([datetime.now(), cpu, ram])
+def log_metrics(cpu, ram, pred):
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO metrics VALUES (?, ?, ?, ?)", 
+              (datetime.now(), cpu, ram, str(pred)))
+    conn.commit()
+    conn.close()
 
 
 @app.route('/health')
@@ -58,7 +72,7 @@ def health():
     ram_history.append(ram)
     prediction = predict_crash()
     analyze_trend(ram)
-    log_metrics(cpu, ram)
+    log_metrics(cpu, ram, prediction)
 
     if percentage_used >= 85 and (current_time - last_cleared) > 300:
         os.system('sync; echo 3 | sudo tee /proc/sys/vm/drop_caches')
@@ -74,5 +88,15 @@ def health():
     })
 
 
+@app.route('/history')
+def history():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM metrics ORDER BY timestamp DESC LIMIT 10")
+    rows = c.fetchall()
+    conn.close()
+    return jsonify(rows)
+
 if __name__ == '__main__':
+    init_db()
     app.run(host='0.0.0.0', port=5000)
