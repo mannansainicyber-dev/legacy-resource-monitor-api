@@ -22,7 +22,7 @@ def predict_crash():
 
     slope, intercept = np.polyfit(x, y, 1)
 
-    if slope < 0:
+    if slope < -0.1:
         critical_limit = 200 
         steps_to_crash = (critical_limit - intercept) / slope
         return round(steps_to_crash * 2, 1)
@@ -69,7 +69,7 @@ def health():
         "status": "online",
         "cpu_usage_percent": cpu,
         "ram_available_mb": round(ram, 2),
-        "prediction_to_limit": prediction
+        "prediction_to_limit": prediction,
         "arch": "32-bit"
     })
 
