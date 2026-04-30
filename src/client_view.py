@@ -10,7 +10,6 @@ def fetch_metrics():
         response = requests.get(URL, timeout=2)
         if response.status_code == 200:
             data = response.json()
-            # Clear terminal for a "dashboard" feel
             os.system('cls' if os.name == 'nt' else 'clear')
             
             print(f"=== REMOTE SENTINEL: {LAPTOP_IP} ===")
@@ -27,4 +26,4 @@ def fetch_metrics():
 if __name__ == "__main__":
     while True:
         fetch_metrics()
-        time.sleep(2) # Refresh every 2 seconds
+        time.sleep(2)
