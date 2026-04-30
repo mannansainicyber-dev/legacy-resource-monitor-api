@@ -17,6 +17,7 @@ def fetch_metrics():
             print(f"Arch:     {data['arch']}")
             print(f"CPU:      {data['cpu_usage_percent']}%")
             print(f"Free RAM: {data['ram_available_mb']} MB")
+            print(f"prediction_to_limit": {data['prediction']})
             print("=====================================")
         else:
             print(f"Error: Server returned {response.status_code}")
